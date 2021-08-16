@@ -1,10 +1,10 @@
 <header id="header" class="navbar navbar-expand-lg navbar-fixed navbar-bordered flex-lg-column px-0">
-    <div class="navbar-dark w-100">
+    <div class="w-100">
         <div class="container-fluid">
             <div class="navbar-nav-wrap">
                 <div class="navbar-brand-wrapper">
                     <a class="navbar-brand" href="{{ route('console.index') }}" aria-label="">
-                        <img class="navbar-brand-logo" src="{{ asset('assets/default/img/logo-btekno-light.png') }}" alt="Logo">
+                        <img class="navbar-brand-logo" src="{{ asset('assets/default/img/logo-btekno.png') }}" alt="Logo">
                     </a>
                 </div>
                 <div class="navbar-nav-wrap-content-left">
@@ -48,7 +48,7 @@
                                         &quot;type&quot;: &quot;css-animation&quot;
                                     }" data-hs-unfold-target="#accountNavbarDropdown" data-hs-unfold-invoker="">
                                     <div class="avatar avatar-sm avatar-circle">
-                                        <img class="avatar-img" src="{{ me()->photo_url }}" alt="{{ me()->name }}">
+                                        <img class="avatar-img" src="{{ me()->photo }}" alt="{{ me()->name }}">
                                         <span class="avatar-status avatar-sm-status avatar-status-success"></span>
                                     </div>
                                 </a>
@@ -56,31 +56,11 @@
                                     <div class="dropdown-item-text">
                                         <div class="media align-items-center">
                                             <div class="avatar avatar-sm avatar-circle mr-2">
-                                                <img class="avatar-img" src="{{ me()->photo_url }}" alt="{{ me()->name }}">
+                                                <img class="avatar-img" src="{{ me()->photo }}" alt="{{ me()->name }}">
                                             </div>
                                             <div class="media-body">
-                                                @if(me()->level == 'Admin')
-                                                    <span class="card-title h5">{{ me()->name }}</span>
-                                                    <span class="card-text text-truncate">{{ me()->email }}</span>
-                                                @endif
-                                                @if(me()->level == 'Kelurahan')
-                                                    <span class="card-title h5">{{ me()->name }}</span>
-                                                    <span class="card-text text-truncate">
-                                                        Kec. {{ ucwords(strtolower(optional(me()->kelurahan)->kecamatan->nama)) }}
-                                                    </span>
-                                                @endif
-                                                @if(me()->level == 'Kecamatan')
-                                                    <span class="card-title h5">{{ me()->name }}</span>
-                                                    <span class="card-text text-truncate">
-                                                        Kota Samarinda
-                                                    </span>
-                                                @endif
-                                                @if(me()->level == 'RT')
-                                                    <span class="card-title h5">RT. {{ me()->name }}</span>
-                                                    <span class="card-text text-truncate">
-                                                        Kelurahan {{ ucwords(strtolower(optional(optional(me()->rt)->kelurahan)->nama)) }}
-                                                    </span>
-                                                @endif
+                                                <span class="card-title h5">{{ me()->name }}</span>
+                                                <span class="card-text text-truncate">{{ me()->email }}</span>
                                             </div>
                                         </div>
                                     </div>
