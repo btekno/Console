@@ -12,11 +12,9 @@ Route::as('console::')->group(function()
 
     Route::namespace('Today')->as('today.')->prefix('today')->group(function() {
         Route::get('/', 'IndexController@index')->name('index');
-        
         Route::resource('posts', 'PostController');
-        Route::resource('kategori', 'Kategori\\IndexController');
-        Route::resource('kategori.posts', 'Kategori\\PostController');
-
+        
+        Route::resource('kategori', 'KategoriController');
         Route::resource('reaksi', 'ReaksiController');
         Route::resource('widget', 'WidgetController');
         Route::resource('laman', 'LamanController');

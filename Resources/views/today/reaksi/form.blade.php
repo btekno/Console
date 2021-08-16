@@ -1,14 +1,14 @@
 <div class="card-body bg-light p-0" style="min-height: calc(100vh - 266px);">
 	<div class="p-3">
-		<div class="form-group mb-2 mt-3">
+		<div class="form-group mb-3 mt-3">
 			<label for="order" class="mb-1 ml-1 text-muted text-cap text-bold small">
-				Order <span class="text-danger">*</span>
+				Urutan <span class="text-danger">*</span>
 			</label>
 			{!! Form::number('order', null, ['class' => 'form-control', 'placeholder' => 'Urutan tampilan icon.']) !!}
 			{!! $errors->first('order', '<small class="text-danger">:message</small>') !!}
 		</div>
 
-		<div class="form-group mb-2">
+		<div class="form-group mb-3">
 			<label for="name" class="mb-1 ml-1 text-muted text-cap text-bold small">
 				Nama <span class="text-danger">*</span>
 			</label>
@@ -16,7 +16,7 @@
 			{!! $errors->first('name', '<small class="text-danger">:message</small>') !!}
 		</div>
 
-		<div class="form-group mb-2">
+		<div class="form-group mb-3">
 			<label for="icon" class="mb-1 ml-1 text-muted text-cap text-bold small">
 				Icon <span class="text-danger">*</span>
 			</label>

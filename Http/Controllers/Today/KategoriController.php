@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Console\Http\Controllers\Today\Kategori;
+namespace Modules\Console\Http\Controllers\Today;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use Modules\Today\Entities\Category;
 
-class IndexController extends Controller
+class KategoriController extends Controller
 {
     protected $title = 'Kategori';
 
@@ -70,12 +70,36 @@ class IndexController extends Controller
      */
     public function store(Request $request) 
     {
-        $this->validate($request, [
-            'label' => 'required'
-        ]);
-
         $input = $request->all();
-        $input['jenis'] = 'Asal Dana';
+
+        $this->validate($request, ['jenis' => 'required']);
+
+        # Kategori Utama
+        if($request->status_penduduk == 'Kategori Utama'):
+            $this->validate($request, [
+                'jenis' => 'required', 
+                'nama' => 'required', 
+                'slug' => 'required|unique:mysql_today.td_categories,slug', 
+                'keterangan' => 'required', 
+            ]);
+
+            $input['jenis'] = $request->jenis;
+            $input['induk_id'] = null;
+        endif;
+
+        # Sub Kategori
+        if($request->status_penduduk == 'Sub Kategori'):
+            $this->validate($request, [
+                'induk_id' => 'required', 
+                'nama' => 'required', 
+                'slug' => 'required|unique:mysql_today.td_categories,slug', 
+                'keterangan' => 'required', 
+            ]);
+            
+            $input['jenis'] = null;
+            $input['induk_id'] = $request->induk_id;
+        endif;
+
         $this->data->create($input);
         
         notify()->flash($this->tCreate, 'success');
@@ -162,8 +186,13 @@ class IndexController extends Controller
 
                 return $return;
             })
-            ->editColumn('label', function($data) {
-                $return = $data->label;
+            ->editColumn('name', function($data) {
+                $return = $data->name;
+
+                return $return;
+            })
+            ->editColumn('slug', function($data) {
+                $return = $data->slug;
 
                 return $return;
             })
@@ -177,6 +206,6 @@ class IndexController extends Controller
 
                 return $return;
             })
-            ->rawColumns(['pilihan', 'label', 'aksi'])->toJson();
+            ->rawColumns(['pilihan', 'name', 'slug', 'aksi'])->toJson();
     }
 }

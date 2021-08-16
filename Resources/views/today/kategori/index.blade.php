@@ -21,7 +21,7 @@
                     { data: 'pilihan', name: 'pilihan', className: 'table-column-pr-0', orderable: false, searchable: false },
                     { data: 'order', name: 'order', className: 'text-center', orderable: false, searchable: false },
                     { data: 'name', name: 'name', orderable: false, searchable: false },
-                    { data: 'display', name: 'display', className: 'text-center', orderable: false, searchable: false },
+                    { data: 'slug', name: 'slug', className: 'text-center', orderable: false, searchable: false },
                     { data: 'aksi', name: 'aksi', className: 'text-right', orderable: false, searchable: false }
                 ],
                 oLanguage: {
@@ -32,9 +32,15 @@
                     @include('console::layouts.components.scripts.callback')
                 }
             });
-            $('.js-file-attach').each(function () {
-	            var customFile = new HSFileAttach($(this)).init();
-	        });
+            $('.js-select2-custom').each(function () {
+				var select2 = $.HSCore.components.HSSelect2.init($(this), {
+					'minimumResultsForSearch': 'Infinity'
+				});
+			});
+			$('input[name="jenis"]').click(function () {
+                $(this).tab('show');
+                $(this).removeClass('active');
+            });
         });
     </script>
 @endsection
@@ -51,11 +57,36 @@
     ])
 
     <div class="row no-gutters">
+		<div class="col-md-4">
+			@isset($edit)
+				{!! Form::model($edit, ['route' => ["$prefix.update", $edit->id], 'method' => 'PUT', 'files' => true]) !!}
+					<div class="card rounded-0 border-0 shadow-none mb-0">
+						<div class="card-header rounded-0 bg-dark py-2 px-3">
+							<h3 class="card-title text-light h5">
+								<i class="tio-new-message"></i> {{ $title }}
+							</h3>
+						</div>
+						@include("$view.form")
+					</div>
+				{!! Form::close() !!}
+			@else
+				{!! Form::open(['route' => "$prefix.store", 'files' => true]) !!}
+					<div class="card rounded-0 border-0 shadow-none mb-0">
+						<div class="card-header rounded-0 bg-dark py-2 px-3">
+							<h3 class="card-title text-light h5">
+								<i class="tio-add-square-outlined"></i> Tambah {{ $title }}
+							</h3>
+						</div>
+						@include("$view.form")
+					</div>
+				{!! Form::close() !!}
+			@endisset
+		</div>
     	<div class="col-md-8">
     		<div class="card border-0 shadow-none rounded-0">
     			<div class="card-header rounded-0 bg-dark py-2 px-3">
 					<h3 class="card-title text-light h5">
-						<i class="tio-format-points"></i> List Reaction
+						<i class="tio-format-points"></i> List {{ $title }}
 					</h3>
 				</div>
 				<div class="card-body p-0">
@@ -70,9 +101,9 @@
 												<label class="custom-control-label" for="check-all"></label>
 											</div>
 										</th>
-										<th width="1">URUTAN</th>
-										<th>LABEL</th>
-										<th width="1">STATUS</th>
+										<th width="1">#</th>
+										<th>NAMA KATEGORI</th>
+										<th width="20%">SLUG</th>
 										<th width="10%"></th>
 									</tr>
 								</thead>
@@ -82,31 +113,6 @@
 				</div>
 			</div>
     	</div>
-		<div class="col-md-4">
-			@isset($edit)
-				{!! Form::model($edit, ['route' => ["$prefix.update", $edit->id], 'method' => 'PUT', 'files' => true]) !!}
-					<div class="card rounded-0 border-0 shadow-none mb-0">
-						<div class="card-header rounded-0 bg-dark py-2 px-3">
-							<h3 class="card-title text-light h5">
-								<i class="tio-new-message"></i> Icon Reaction
-							</h3>
-						</div>
-						@include("$view.form")
-					</div>
-				{!! Form::close() !!}
-			@else
-				{!! Form::open(['route' => "$prefix.store", 'files' => true]) !!}
-					<div class="card rounded-0 border-0 shadow-none mb-0">
-						<div class="card-header rounded-0 bg-dark py-2 px-3">
-							<h3 class="card-title text-light h5">
-								<i class="tio-add-square-outlined"></i> Icon Reaction
-							</h3>
-						</div>
-						@include("$view.form")
-					</div>
-				{!! Form::close() !!}
-			@endisset
-		</div>
     </div>
 
 @endsection

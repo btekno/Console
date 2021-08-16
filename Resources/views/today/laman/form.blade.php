@@ -1,7 +1,7 @@
 <div class="card-body pb-0" style="height: calc(100vh - 245px);overflow-y: scroll;">
     <div class="row form-group mb-2">
         <label for="title" class="col-sm-2 col-form-label font-weight-bold">
-            Title <span class="text-danger">*</span>
+            Judul <span class="text-danger">*</span>
         </label>
         <div class="col-sm-10">
             {!! Form::text('title', null, ['class' => 'form-control' . $errors->first('title', ' is-invalid')]) !!}
@@ -10,8 +10,17 @@
     </div>
 
     <div class="row form-group mb-2">
+        <label for="meta" class="col-sm-2 col-form-label font-weight-bold">
+            Preview<span class="input-label-secondary">(Untuk SEO)</span>
+        </label>
+        <div class="col-sm-10">
+            {!! Form::textarea('meta', null, ['class' => 'form-control', 'rows' => 2]) !!}
+        </div>
+    </div>
+
+    <div class="row form-group mb-2">
         <label for="content" class="col-sm-2 col-form-label font-weight-bold">
-            Content <span class="text-danger">*</span>
+            Konten <span class="text-danger">*</span>
         </label>
         <div class="col-sm-10">
             {!! Form::textarea('content', null, ['class' => 'form-control tinymce' . $errors->first('content', ' is-invalid')]) !!}

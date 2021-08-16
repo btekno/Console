@@ -62,7 +62,7 @@
 												<label class="custom-control-label" for="check-all"></label>
 											</div>
 										</th>
-										<th>TITLE</th>
+										<th>JUDUL HALAMAN</th>
 										<th width="1">FOOTER</th>
 										<th width="10%"></th>
 									</tr>
