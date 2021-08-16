@@ -1,6 +1,6 @@
 <?php
 
-Route::as('console.')->group(function() 
+Route::as('console::')->group(function() 
 {
     Route::get('/', 'IndexController@index')->name('index');
     Route::resource('members', 'MemberController');
@@ -20,6 +20,7 @@ Route::as('console.')->group(function()
         Route::resource('reaksi', 'ReaksiController');
         Route::resource('widget', 'WidgetController');
         Route::resource('laman', 'LamanController');
+        Route::resource('member', 'MemberController');
         
         Route::resource('pengaturan', 'PengaturanController')->only(['index', 'store']);
     });

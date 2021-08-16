@@ -3,7 +3,7 @@
         <div class="container-fluid">
             <div class="navbar-nav-wrap">
                 <div class="navbar-brand-wrapper">
-                    <a class="navbar-brand" href="{{ route('console.index') }}" aria-label="">
+                    <a class="navbar-brand" href="{{ route('console::index') }}" aria-label="">
                         <img class="navbar-brand-logo" src="{{ asset('assets/default/img/logo-btekno.png') }}" alt="Logo">
                     </a>
                 </div>

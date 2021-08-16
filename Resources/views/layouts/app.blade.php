@@ -34,26 +34,18 @@
             -webkit-overflow-scrolling: touch;
         }
         .navbar-fixed~.main {
-            margin-top: 3.8rem;
+            margin-top: 2.75rem;
         }
         @media (min-width: 992px) {
             .navbar-vertical.navbar-expand-lg {
-                min-height: 84vh;
-                position: fixed;
-                width: 100%;
+                height: calc(100vh - 105px);
+                overflow-y: scroll;
             }
         }
         @media (max-width: 991.98px) {
             .navbar-fixed~.main {
                 margin-top: 0;
             }
-        }
-        
-        .min-height-275px {
-            min-height: calc(100vh - 200px);
-        }
-        .min-height-200px {
-            min-height: calc(100vh - 200px);
         }
     </style>
 
