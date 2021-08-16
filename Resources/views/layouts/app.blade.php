@@ -36,6 +36,9 @@
         .navbar-fixed~.main {
             margin-top: 2.75rem;
         }
+        .ml--1 {
+            margin-left: -1px;
+        }
         @media (min-width: 992px) {
             .navbar-vertical.navbar-expand-lg {
                 height: calc(100vh - 105px);
@@ -90,8 +93,15 @@
 
     @yield('js')
 
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    @include('sweet::alert')
+    @if(notify()->ready())
+        <script type="text/javascript">
+            swal({
+                title: 'Perhatian!',
+                type: '{!! notify()->type() !!}',
+                html: '{!! notify()->message() !!}'
+            });
+        </script>
+    @endif
 
     <script>
         if (/MSIE \d|Trident.*rv:/.test(navigator.userAgent)) document.write('<script src="https://cdn.btekno.id/templates/assets/vendor/babel-polyfill/polyfill.min.js"><\/script>');
