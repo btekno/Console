@@ -16,7 +16,9 @@
             <h1 class="page-header-title">{{ $title }}</h1>
         </div>
         <div class="col-sm-auto tombol-kanan d-flex">
+
             @stack('push-menu')
+            
             @if(isset($hapus))
                 <button type="submit" class="btn btn-sm btn-danger mr-1" id="delete-all-button" style="display:none">
                     <i class="tio-delete"></i> Hapus

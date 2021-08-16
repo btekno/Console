@@ -58,6 +58,11 @@
 						<li class="px-3 mt-3">
 							<p class="text-muted text-cap small mb-2">Referensi</p>
 						</li>
+						<li class="nav-item {{ request()->segment(2) == 'menu' ? 'active' : '' }}">
+							<a class="nav-link pl-3 py-1" href="{{ route('console::today.menu.index') }}">
+								<i class="tio-format-points nav-icon"></i> Menu
+							</a>
+						</li>
 						<li class="nav-item {{ request()->segment(2) == 'kategori' ? 'active' : '' }}">
 							<a class="nav-link pl-3 py-1" href="{{ route('console::today.kategori.index') }}">
 								<i class="tio-folder-outlined nav-icon"></i> Kategori

@@ -14,6 +14,7 @@ Route::as('console::')->group(function()
         Route::get('/', 'IndexController@index')->name('index');
         Route::resource('posts', 'PostController');
         
+        Route::resource('menu', 'MenuController');
         Route::resource('kategori', 'KategoriController');
         Route::resource('reaksi', 'ReaksiController');
         Route::resource('widget', 'WidgetController');
