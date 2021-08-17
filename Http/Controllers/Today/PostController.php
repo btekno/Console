@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use Modules\Today\Entities\Post;
+use Modules\Today\Events\PostUpdated;
 
 class PostController extends Controller
 {
@@ -48,24 +49,20 @@ class PostController extends Controller
         $title = 'Latest Posts';
         if($request->filled('only')):
             if($request->only == 'unapproved'):
-                $type = 'unapproved';
                 $title = 'Menunggu Persetujuan';
+                $type = 'unapproved';
             endif;
             if($request->only == 'trashed'):
-                $type = 'trashed';
                 $title = 'Recycle Bin';
+                $type = 'trashed';
             endif;
             if($request->only == 'featured'):
-                $type = 'featured';
                 $title = 'Featured Posts';
+                $type = 'featured';
             endif;
         endif;
 
-        return view("{$this->view}.index")->with([
-            'title' => $title, 
-            'desc' => '', 
-            'type' => $type
-        ]);
+        return view("{$this->view}.index", compact('title', 'type'));
     }
 
     /**
@@ -75,7 +72,7 @@ class PostController extends Controller
      */
     public function create() 
     {
-        return view("{$this->view}.create");
+        return abort(404);
     }
 
     /**
@@ -86,20 +83,7 @@ class PostController extends Controller
      */
     public function store(Request $request) 
     {
-        $this->validate($request, [
-            'title' => 'required', 
-            'content' => 'required'
-        ]);
-
-        $input = $request->all();
-        
-        $input['slug'] = str_slug($request->title);
-        $input['footer'] = $request->filled('footer') ? 1 : 0;
-
-        $this->data->create($input);
-        
-        notify()->flash($this->tCreate, 'success');
-        return redirect($this->toIndex);
+        return abort(404);
     }
 
     /**
@@ -121,9 +105,86 @@ class PostController extends Controller
      */
     public function edit(Request $request, $id) 
     {
-        $edit = $this->data->findOrFail($id);
+        $edit = $this->data->withTrashed()->whereId($id)->firstOrFail();
 
-        return view("{$this->view}.edit", compact('edit'));
+        if($request->filled('purpose')):
+            switch($request->purpose):
+
+                case 'approve':
+                    if($edit->approve == 'no'):
+                        $edit->approve = 'yes';
+                        $edit->save();
+
+                        event(new PostUpdated($edit, 'Approved'));
+                        notify()->flash('Post berhasil di approve.', 'success');
+                    else:
+                        $edit->approve = 'no';
+                        $edit->save();
+                        
+                        notify()->flash('Approval dibatalkan.', 'success');
+                    endif;
+                break;
+
+                case 'featured':
+                    if($edit->featured_at == null):
+                        $edit->featured_at = \Carbon\Carbon::now();
+                    else:
+                        $edit->featured_at = null;
+                    endif;
+
+                    $edit->save();
+                    notify()->flash('Featured berhasil diperbarui.', 'success');
+                break;
+
+                case 'homepage':
+                    if($edit->show_in_homepage == null):
+                        $edit->show_in_homepage = 'yes';
+                    else:
+                        $edit->show_in_homepage = null;
+                    endif;
+
+                    $edit->save();
+                    notify()->flash('Homepage berhasil diperbarui.', 'success');
+                break;
+
+                case 'delete':
+                    if($edit->deleted_at == null):
+                        $edit->approve = 'no';
+                        $edit->delete();
+
+                        event(new PostUpdated($edit, 'Trash'));
+                        notify()->flash('Post berhasil di hapus.', 'success');
+                    else:
+                        $edit->approve = 'yes';
+                        $edit->restore();
+
+                        notify()->flash('Post terhapus berhasil di restore.', 'success');
+                    endif;
+                break;
+
+                case 'force-delete':
+                    try {
+                        if($edit->deleted_at !== null):
+                            event(new PostUpdated($edit, 'Trash'));
+                        endif;
+
+                        $edit->forceDelete();
+
+                        notify()->flash('Deleted permanently', 'success');
+                    } catch (\Exception $e) {
+                        return $e;
+                        notify()->flash('Galat!', 'error');
+                    }
+
+                    return redirect()->back();
+                break;
+                default:
+                    return abort(404);
+                break;
+            endswitch;
+        endif;
+
+        return redirect()->back();
     }
 
     /**
@@ -133,23 +194,147 @@ class PostController extends Controller
      * @return Back [Tampilkan halaman yang sama]
      */
     public function update(Request $request, $id) 
-    {   
-        $edit = $this->data->findOrFail($id);
+    {
+        $ids = explode(',', $request->ids);
 
-        $this->validate($request, [
-            'title' => 'required', 
-            'content' => 'required' 
-        ]);
+        if($request->filled('purpose')):
+            if($request->purpose == 'bulk'):
+                switch($id):
+                    case 'restore':
+                        foreach($ids as $temp):
+                            $item = $this->data->withTrashed($temp)->find($temp);
+                            $item->restore();
+                        endforeach;
 
-        $input = $request->all();
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Beberapa post berhasil di restore.'
+                        ]);
+                    break;
+                    
+                    case 'delete':
+                        foreach($ids as $temp):
+                            $item = $this->data->withTrashed($temp)->find($temp);
+                            $item->approve = 'no';
+                            $item->delete();
 
-        $input['slug'] = str_slug($request->title);
-        $input['footer'] = $request->filled('footer') ? 1 : 0;
+                            event(new PostUpdated($item, 'Trash'));
+                        endforeach;
 
-        $edit->update($input);
-        
-        notify()->flash($this->tUpdate, 'success');
-        return redirect($this->toIndex);
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Beberapa post berhasil di restore.'
+                        ]);
+                    break;
+
+                    case 'delete-permanent':
+                        foreach($ids as $temp):
+                            $item = $this->data->withTrashed($temp)->find($temp);
+                            try {
+                                if($item->deleted_at !== null):
+                                    event(new PostUpdated($item, 'Trash'));
+                                endif;
+
+                                $item->forceDelete();
+                            } catch (\Exception $e) {
+                                return $e;
+                            }
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Beberapa post dihapus permanen.'
+                        ]);
+                    break;
+
+                    case 'approve':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->approve = 'yes';
+                            $item->save();
+
+                            event(new PostUpdated($item, 'Approved'));
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    case 'unapprove':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->approve = 'no';
+                            $item->save();
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    case 'featured':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->featured_at = \Carbon\Carbon::now();
+                            $item->save();
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    case 'unfeatured':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->featured_at = null;
+                            $item->save();
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    case 'homepage':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->show_in_homepage = 'yes';
+                            $item->save();
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    case 'unhomepage':
+                        foreach($ids as $temp):
+                            $item = $this->data->find($temp);
+                            $item->show_in_homepage = null;
+                            $item->save();
+                        endforeach;
+
+                        return response()->json([
+                            'success' => true, 
+                            'message' => 'Perubahan status berhasil.'
+                        ]);
+                    break;
+
+                    default:
+                        return abort(404);
+                    break;
+                endswitch;
+            endif;
+        endif;
+
+        return abort(404);
     }
 
     /**
@@ -178,23 +363,21 @@ class PostController extends Controller
      */
     public function datatable(Request $request)
     {
-        $type = $request->query('type');
         $only = $request->query('only');
 
         $post = $this->data->leftJoin('td_users', 'td_posts.user_id', '=', 'td_users.id');
         $post->select('td_posts.*');
 
-        switch($type):
+        switch($only):
             case 'all':break;
             case 'category':
                 $category_id = $request->query('category_id');
                 $post->where('categories', 'LIKE', '%"' . $category_id . ',%')->orWhere('categories', 'LIKE',  '%,' . $category_id . ',%');
             break;
             case 'featured':
-                $post->where('type', $type);
+                $post->whereNotNull('featured_at');
             break;
             default:
-                $post->whereNotNull("featured_at");
             break;
         endswitch;
 
@@ -220,27 +403,27 @@ class PostController extends Controller
 
                 $status = '';
                 if($post->deleted_at !== null):
-                    $status .= '<div class="badge badge-soft-danger">On Trash</div><br/>';
+                    $status .= '<div class="badge badge-soft-danger mr-1">On Trash</div>';
                 else:
                     if($post->approve == 'yes'):
-                        $status .= '<div class="badge badge-success">Active</div><br/>';
+                        $status .= '<div class="badge badge-success mr-1">Active</div>';
                     endif;
                     if($post->approve == 'draft'):
-                        $status .= '<div class="badge badge-white">Draft Post</div><br/>';
+                        $status .= '<div class="badge badge-white mr-1">Draft Post</div>';
                     endif;
                     if($post->approve == 'no'):
-                        $status .= '<div class="badge badge-soft-warning">Awaiting Approval</div><br/>';
+                        $status .= '<div class="badge badge-soft-warning mr-1">Awaiting Approval</div>';
                     endif;
 
                     if($post->featured_at !== null):
-                        $status .= '<div class="badge badge-soft-primary">Featured Post</div><br/>';
+                        $status .= '<div class="badge badge-soft-primary mr-1">Featured Post</div>';
                     endif;
                     if($post->show_in_homepage == 'yes'):
-                        $status .= '<div class="badge badge-soft-success">Picked for Homepage</div><br/>';
+                        $status .= '<div class="badge badge-soft-success mr-1">Picked for Homepage</div>';
                     endif;
-                    // if($post->published_at):
-                    //     $status .= '<div class="badge badge-soft-secondary">Scheduled for '.$post->published_at->format('j M Y, h:i A').'</div><br/>';
-                    // endif;
+                    if($post->published_at && $post->published_at->getTimestamp() > \Carbon\Carbon::now()->getTimestamp()):
+                        $status .= '<div class="badge badge-soft-secondary mr-1">Scheduled for '.$post->published_at->format('j M Y, h:i A').'</div>';
+                    endif;
                 endif;
                 return <<<EOD
                     <div class="d-flex align-items-start">
@@ -256,7 +439,7 @@ class PostController extends Controller
                 EOD;
             })
             ->editColumn('user', function ($post) {
-                return $post->user ? '<a href="/u/' . optional(optional($post->user)->user)->username . '" target="_blank" data-toggle="tooltip" data-placement="top" title="'.optional(optional($post->user)->user)->name.'"><img src="' . optional(optional($post->user)->user)->photo . '" width="32"></a>' : '';
+                return $post->user ? '<a href="/u/' . optional(optional($post->user)->user)->username . '" target="_blank" data-toggle="tooltip" data-placement="top" title="'.optional(optional($post->user)->user)->name.'"><img src="' . optional(optional($post->user)->user)->photo . '" width="32" class="avatar"></a>' : '';
             })
             ->editColumn('created_at', function ($post) {
                 \Carbon\Carbon::setLocale('id');
@@ -285,6 +468,17 @@ class PostController extends Controller
                 if($post->featured_at):
                     $return  = '<span class="d-block small text-body">'.$post->featured_at->format('Y-m-d H:i:s').'</span>';
                     $return .= '<span class="d-block h6 mb-0">'. str_replace('yang ', '', $post->featured_at->diffForHumans()) .'</span>';
+                else:
+                    $return = '-';
+                endif;
+
+                return $return;
+            })
+            ->editColumn('deleted_at', function ($post) {
+                \Carbon\Carbon::setLocale('id');
+                if($post->deleted_at):
+                    $return  = '<span class="d-block small text-body">'.$post->deleted_at->format('Y-m-d H:i:s').'</span>';
+                    $return .= '<span class="d-block h6 mb-0">'. str_replace('yang ', '', $post->deleted_at->diffForHumans()) .'</span>';
                 else:
                     $return = '-';
                 endif;
@@ -348,17 +542,21 @@ class PostController extends Controller
                         </li>';
                     $return .= '<li class="divider"></li>';
                     $return .= '<li>
-                            <a href="' . route("$this->prefix.destroy",  $post->id) . '" class="dropdown-item pl-3">
+                            <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=delete" class="dropdown-item pl-3">
                                 <i class="tio-add-to-trash text-danger mr-1"></i> Send to Trash
                             </a>
                         </li>';
                 
                 else:
-                    $return .= '<li><a href="' . route("$this->prefix.destroy",  $post->id) . '" class="dropdown-item pl-3"><i class="tio-recycling text-success mr-1"></i> Retrieve from Trash</a></li>';
+                    $return .= '<li>
+                            <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=delete" class="dropdown-item pl-3">
+                                <i class="tio-recycling text-success mr-1"></i> Retrieve from Trash
+                            </a>
+                        </li>';
                 endif;
 
                 $return .= '<li>
-                    <a href="' . route("$this->prefix.destroy",  $post->id) . '?force=true" class="dropdown-item pl-3 text-danger">
+                    <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=force-delete" class="dropdown-item pl-3 text-danger">
                         <i class="tio-delete  mr-1"></i> Hapus Permanen
                     </a>
                 </li>';

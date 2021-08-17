@@ -64,6 +64,19 @@
         .scrollbar::-webkit-scrollbar-thumb {
             background-color: rgba(189,197,209,.6);
         }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            background: rgba(255,255,255,0.7);
+            border-radius: 3px;
+        }
+        .hide {
+            display: none!important;
+        }
     </style>
 
 </head>
