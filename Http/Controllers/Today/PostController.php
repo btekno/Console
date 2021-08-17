@@ -47,6 +47,10 @@ class PostController extends Controller
         $type = 'all';
         $title = 'Latest Posts';
         if($request->filled('only')):
+            if($request->only == 'unapproved'):
+                $type = 'unapproved';
+                $title = 'Menunggu Persetujuan';
+            endif;
             if($request->only == 'trashed'):
                 $type = 'trashed';
                 $title = 'Recycle Bin';

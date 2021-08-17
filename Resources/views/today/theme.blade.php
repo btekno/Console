@@ -27,7 +27,9 @@
 						</span>
 					</span>
 				</button>
-				<div id="navbarVerticalNavMenu" class="collapse navbar-collapse">
+				<div id="navbarVerticalNavMenu" class="collapse navbar-collapse js-navbar-vertical-aside">
+
+
 					<ul class="navbar-nav navbar-nav-sm nav-tabs card rounded-0 shadow-none bg-light card-navbar-nav pt-2">
 						<li class="nav-item mb-0 @yield('sm-home')">
 							<a class="nav-link pl-3 py-1" href="{{ route('console::today.index') }}">
@@ -54,6 +56,28 @@
 								<i class="tio-delete nav-icon"></i> Recycle Bin
 							</a>
 						</li>
+
+						<li class="navbar-vertical-aside-has-menu">
+              <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle " href="javascript:;" title="Dashboards">
+                <i class="tio-home-vs-1-outlined nav-icon"></i>
+                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">Dashboards</span>
+              </a>
+
+              <ul class="js-navbar-vertical-aside-submenu nav nav-sub">
+                <li class="nav-item">
+                  <a class="nav-link " href="../index.html" title="Default">
+                    <span class="tio-circle nav-indicator-icon"></span>
+                    <span class="text-truncate">Default</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link " href="../dashboard-alternative.html" title="Alternative">
+                    <span class="tio-circle nav-indicator-icon"></span>
+                    <span class="text-truncate">Alternative</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
 
 						<li class="px-3 mt-3">
 							<p class="text-muted text-cap small mb-2">Referensi</p>
