@@ -42,39 +42,11 @@
 				});
 			@endif
         });
-        function modalHapus(i) {
-			swal({
-				title: 'Apa Anda Yakin?',
-				html: 'Data ini akan kami hapus dari sistem.',
-				type: 'warning',
-				showCancelButton: true,
-				confirmButtonText: 'Yakin',
-				cancelButtonText: 'Batalkan',
-			}).then(function(data) {
-				$.ajax({
-					type: 'DELETE',
-					url: '{{ route("$prefix.index") }}' + '/' + i,
-					data: {
-						"id": i,
-						"location": '{{ request('location') }}', 
-						"_token": $('meta[name="csrf-token"]').attr('content'),
-					},
-					success: function(data){
-						console.log(data)
-						if(data == "success") {
-							location.href = '{{ route("$prefix.index") }}?location={{ request('location') }}';
-						} else {
-							swal({
-								type: 'warning',
-								title: 'Galat!',
-								html: 'Terjadi kesalahan saat menghapus data. Coba sekali lagi.'
-							});
-						}
-					}
-				});
-			})
-		}
     </script>
+    
+	@include('console::layouts.components.scripts.swal', [
+		'redirect' => route("$prefix.index", 'location=' . request('location'))
+	])
 @endsection
 
 @push('push-menu')

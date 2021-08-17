@@ -50,6 +50,15 @@
                 margin-top: 0;
             }
         }
+        .scrollbar {
+            overflow-y: scroll;
+        }
+        .scrollbar::-webkit-scrollbar {
+            width: .3125rem;
+        }
+        .scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(189,197,209,.6);
+        }
     </style>
 
 </head>

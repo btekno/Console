@@ -41,7 +41,7 @@
 								<i class="tio-checkmark-square nav-icon"></i> Unapproved
 							</a>
 						</li>
-						<li class="nav-item mb-0 {{ !request('only') ? 'active' : '' }}">
+						<li class="nav-item mb-0 {{ request()->segment(2) == 'posts' && !request('only') ? 'active' : '' }}">
 							<a class="nav-link pl-3 py-1" href="{{ route('console::today.posts.index') }}">
 								<i class="tio-bookmarks nav-icon"></i> Latest Posts
 							</a>
