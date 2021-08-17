@@ -33,6 +33,11 @@
             margin: 0;
             -webkit-overflow-scrolling: touch;
         }
+        .navbar-brand-logo {
+            width: 100%;
+            min-width: 8.5rem;
+            max-width: 8.5rem;
+        }
         .navbar-fixed~.main {
             margin-top: 2.75rem;
         }

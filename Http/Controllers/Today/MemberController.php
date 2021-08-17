@@ -193,7 +193,7 @@ class MemberController extends Controller
                         </div>
                         <div class="ml-2">
                             <span class="d-block h5 text-hover-primary mb-0">{$data->user->name}</span>
-                            <span class="d-block font-size-sm text-body">{$data->user->email}</span>
+                            <span class="d-block font-size-sm text-body small">{$data->user->email}</span>
                         </div>
                     </div>
                 EOD;
@@ -265,13 +265,6 @@ class MemberController extends Controller
 
                 return $return;
             })
-            ->rawColumns([
-                'pilihan', 
-                'name', 
-                'status', 
-                'created_at', 
-                'last_login', 
-                'aksi'
-            ])->toJson();
+            ->escapeColumns(['*'])->toJson();
     }
 }

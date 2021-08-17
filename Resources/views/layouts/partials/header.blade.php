@@ -1,6 +1,6 @@
 <header id="header" class="navbar navbar-expand-lg navbar-fixed navbar-bordered flex-lg-column px-0">
     <div class="w-100">
-        <div class="container-fluid">
+        <div class="container-fluid px-3">
             <div class="navbar-nav-wrap">
                 <div class="navbar-brand-wrapper">
                     <a class="navbar-brand" href="{{ route('console::index') }}" aria-label="">

@@ -1,4 +1,4 @@
-<div class="card rounded-0 border-0 shadow-none mb-0">
+<div class="card rounded-0 border-0 shadow-none mb-0 p-3">
 	<div class="card-header rounded-0 bg-dark py-2 px-3">
 		<h3 class="card-title text-light h5">
 			<i class="tio-new-message"></i> {{ $menu->name }}
@@ -63,7 +63,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="card-footer p-2 bg-light">
+		<div class="card-footer p-3 bg-light">
 			<div class="d-flex justify-content-between">
 				@if(isset($menu_item->id))
                     <a href="{{ route("$prefix.index") }}?location={{ request('location') }}" class="btn btn-sm btn-secondary pull-right">
@@ -78,7 +78,7 @@
     {!! Form::close() !!}
 
     @if(!isset($menu_item))
-		<div class="card-header rounded-0 bg-dark py-2 px-3">
+		{{-- <div class="card-header rounded-0 bg-dark py-2 px-3">
 			<h3 class="card-title text-light h5">
 				<i class="tio-add-square-outlined"></i> Ambil dari Kategori
 			</h3>
@@ -98,6 +98,6 @@
 			<div class="d-flex justify-content-end">
 				<button type="submit" class="btn btn-sm btn-primary">Tambah</button>
 			</div>
-		</div>
+		</div> --}}
 	@endif
 </div>

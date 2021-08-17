@@ -178,141 +178,194 @@ class PostController extends Controller
      */
     public function datatable(Request $request)
     {
-        $typew = $request->query('type');
-        $type = $typew;
-
+        $type = $request->query('type');
         $only = $request->query('only');
 
-        $post = Post::leftJoin('td_users', 'td_posts.user_id', '=', 'td_users.id');
+        $post = $this->data->leftJoin('td_users', 'td_posts.user_id', '=', 'td_users.id');
         $post->select('td_posts.*');
 
-        if ($typew == 'all') {
-            //not set
-        } elseif ($typew === 'category') {
-            $category_id = $request->query('category_id');
-            $post->where('categories', 'LIKE',  '%"' . $category_id . ',%')->orWhere('categories', 'LIKE',  '%,' . $category_id . ',%');
-        } elseif ($typew !== 'featured') {
-            $post->where('type', $type);
-        } else {
-            $post->whereNotNull("featured_at");
-        }
+        switch($type):
+            case 'all':break;
+            case 'category':
+                $category_id = $request->query('category_id');
+                $post->where('categories', 'LIKE', '%"' . $category_id . ',%')->orWhere('categories', 'LIKE',  '%,' . $category_id . ',%');
+            break;
+            case 'featured':
+                $post->where('type', $type);
+            break;
+            default:
+                $post->whereNotNull("featured_at");
+            break;
+        endswitch;
 
-        if ($only == 'trashed') {
+        if($only == 'trashed'):
             $post->onlyTrashed();
-        } else {
+        else:
             $post->whereNull('deleted_at');
-        }
+        endif;
 
-        if ($only == 'unapproved') {
+        if($only == 'unapproved'):
             $post->whereApprove('no');
-        } else {
+        else:
             $post->whereApprove('yes');
-        }
+        endif;
 
         return datatables()->of($post)
             ->editColumn('selection', function ($post) {
                 return '<div class="icheckbox_flat-blue" aria-checked="false" aria-disabled="false"><input type="checkbox" name="selection[]" value="'.$post->id.'"></div>';
             })
-            ->editColumn('thumb', function ($post) {
-                return '<img src="' . makepreview($post->thumb, 's', 'posts') . '" width="125">';
-            })
-            ->editColumn('title', function ($post) {
-                return '<a href="' . generate_post_url($post) . '" target=_blank style="font-size:16px;font-weight: 600">
-                        ' . $post->title . '
-                        </a>
-                        <div class="product-meta"></div>
-                    ';
+            ->editColumn('title', function($post) {
+                $url = generate_post_url($post);
+                $thumb = makepreview($post->thumb, 's', 'posts');
+
+                $status = '';
+                if($post->deleted_at !== null):
+                    $status .= '<div class="badge badge-soft-danger">On Trash</div><br/>';
+                else:
+                    if($post->approve == 'yes'):
+                        $status .= '<div class="badge badge-success">Active</div><br/>';
+                    endif;
+                    if($post->approve == 'draft'):
+                        $status .= '<div class="badge badge-white">Draft Post</div><br/>';
+                    endif;
+                    if($post->approve == 'no'):
+                        $status .= '<div class="badge badge-soft-warning">Awaiting Approval</div><br/>';
+                    endif;
+
+                    if($post->featured_at !== null):
+                        $status .= '<div class="badge badge-soft-primary">Featured Post</div><br/>';
+                    endif;
+                    if($post->show_in_homepage == 'yes'):
+                        $status .= '<div class="badge badge-soft-success">Picked for Homepage</div><br/>';
+                    endif;
+                    // if($post->published_at):
+                    //     $status .= '<div class="badge badge-soft-secondary">Scheduled for '.$post->published_at->format('j M Y, h:i A').'</div><br/>';
+                    // endif;
+                endif;
+                return <<<EOD
+                    <div class="d-flex align-items-start">
+                        <div class="avatar avatar-xl avatar-4by3">
+                            <img class="avatar-img" src="{$thumb}" alt="">
+                        </div>
+                        <div class="ml-2">
+                            <a class="d-block text-body mb-0" href="{$url}">{$post->title}</a>
+                            <span class="d-block font-size-sm text-body">{$post->user->email}</span>
+                            <div>{$status}</div>
+                        </div>
+                    </div>
+                EOD;
             })
             ->editColumn('user', function ($post) {
-                return $post->user ? '<div  style="font-weight: 400;color:#aaa">
-                                        <a href="/profile/' . $post->user->username_slug . '" target="_blank"><img src="' . makepreview($post->user->icon, 's', 'members/avatar') . '" width="32" style="margin-right:6px">' . $post->user->username . '</a>
-                                </div>' : '';
+                return $post->user ? '<a href="/u/' . optional(optional($post->user)->user)->username . '" target="_blank" data-toggle="tooltip" data-placement="top" title="'.optional(optional($post->user)->user)->name.'"><img src="' . optional(optional($post->user)->user)->photo . '" width="32"></a>' : '';
             })
-            ->addColumn('approve', function ($post) {
+            ->editColumn('created_at', function ($post) {
+                \Carbon\Carbon::setLocale('id');
+                if($post->created_at):
+                    $return  = '<span class="d-block small text-body">'.$post->created_at->format('Y-m-d H:i:s').'</span>';
+                    $return .= '<span class="d-block h6 mb-0">'. str_replace('yang ', '', $post->created_at->diffForHumans()) .'</span>';
+                else:
+                    $return = '-';
+                endif;
 
-                if ($post->deleted_at !== null) {
-                    $fsdfd = '<div class="label label-danger">' . trans("admin.OnTrash") . '</div>';
-                } elseif ($post->approve == 'draft') {
-                    $fsdfd = '<div class="label label-info" style="background-color: #9c486c !important;">' . trans("admin.DraftPost") . '</div>';
-                } elseif ($post->approve == 'no') {
-                    $fsdfd = '<div class="label label-info" style="background-color: #9c6a11 !important;">' . trans("admin.AwaitingApproval") . '</div>';
-                } elseif ($post->featured_at !== null) {
-                    $fsdfd =  '<div class="clear"></div><div class="label label-warning" style="background-color: #9C5D54 !important;">' . trans("admin.FeaturedPost") . '</div>';
-                } elseif ($post->approve == 'yes') {
-                    $fsdfd = '<div class="label label-info">' . trans("admin.Active") . '</div>';
-                }
-
-                if ($post->show_in_homepage == 'yes') {
-                    $fsdfd .= '<div class="clear"></div><div class="label label-success">' . trans("admin.Pickedforhomepage") . '</div>';
-                }
-
-                // if ($post->published_at->getTimestamp() > \Carbon\Carbon::now()->getTimestamp()) {
-                //     $fsdfd .= '<div class="label bg-gray">' . trans('v3.scheduled_date', ['date' => $post->published_at->format('j M Y, h:i A')])  . '</div>';
-                // }
-
-                return $fsdfd;
-            })
-            ->editColumn('language', function ($post) {
-                if ($post->language) {
-                    return config('languages.language.' . $post->language)['name'];
-                }
-                return "-";
+                return $return;
             })
             ->editColumn('published_at', function ($post) {
-                if ($post->published_at) {
-                    return $post->published_at->format('Y-m-d H:i:s');
-                }
-                return "-";
+                \Carbon\Carbon::setLocale('id');
+                if($post->published_at):
+                    $return  = '<span class="d-block small text-body">'.$post->published_at->format('Y-m-d H:i:s').'</span>';
+                    $return .= '<span class="d-block h6 mb-0">'. str_replace('yang ', '', $post->published_at->diffForHumans()) .'</span>';
+                else:
+                    $return = '-';
+                endif;
+
+                return $return;
             })
             ->editColumn('featured_at', function ($post) {
-                if ($post->featured_at) {
-                    return $post->featured_at->format('Y-m-d H:i:s');
-                }
-                return "-";
+                \Carbon\Carbon::setLocale('id');
+                if($post->featured_at):
+                    $return  = '<span class="d-block small text-body">'.$post->featured_at->format('Y-m-d H:i:s').'</span>';
+                    $return .= '<span class="d-block h6 mb-0">'. str_replace('yang ', '', $post->featured_at->diffForHumans()) .'</span>';
+                else:
+                    $return = '-';
+                endif;
+
+                return $return;
             })
-            ->addColumn('action', function ($post) {
-                $edion = '<div class="input-group-btn">
-                                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">Actions <span class="fa fa-caret-down"></span></button>
-                                  <ul class="dropdown-menu pull-left" style="left:-100px;  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);">';
+            ->addColumn('aksi', function ($post) {
+                $return = '<button type="button" class="btn btn-sm btn-white dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                            <i class="tio-more-horizontal"></i>
+                        </button>
+                        <ul class="dropdown-menu rounded-sm">';
 
-                if ($post->deleted_at == null) {
-                    if ($post->approve == 'no') {
-                        $edion = $edion . '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=approve"><i class="fa fa-check"></i>  ' . trans("admin.Approve") . '</a></li>';
-                    } elseif ($post->approve == 'yes') {
-                        $edion = $edion . '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=approve"><i class="fa fa-remove"></i> ' . trans("admin.UndoApprove") . '</a></li>';
-                    }
+                if($post->deleted_at == null):
+                    if($post->approve == 'no'):
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=approve" class="dropdown-item pl-3">
+                                    <i class="tio-checkmark-square text-success"></i> Approve
+                                </a>
+                            </li>';
+                    else:
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=approve" class="dropdown-item pl-3">
+                                    <i class="tio-clear text-danger"></i> Undo Approve
+                                </a>
+                            </li>';
+                    endif;
 
-                    if ($post->featured_at == null) {
-                        $edion = $edion .  '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=featured"><i class="fa fa-star"></i> ' . trans("admin.PickforFeatured") . '</a></li>';
-                    } else {
-                        $edion = $edion .  '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=featured"><i class="fa fa-remove"></i> ' . trans("admin.UndoFeatured") . '</a></li>';
-                    }
+                    if($post->featured_at == null):
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=featured" class="dropdown-item pl-3">
+                                    <i class="tio-star text-warning"></i> Pick for Featured
+                                </a>
+                            </li>';
+                    else:
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=featured" class="dropdown-item pl-3">
+                                    <i class="tio-star"></i> Undo Featured
+                                </a>
+                            </li>';
+                    endif;
 
-                    if ($post->show_in_homepage == null) {
-                        $edion = $edion .  '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=homepage"><i class="fa fa-dashboard"></i> ' . trans("admin.PickforHomepage") . '</a></li>';
-                    } elseif ($post->show_in_homepage == 'yes') {
-                        $edion = $edion .  '<li><a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=homepage"><i class="fa fa-remove"></i>   ' . trans("admin.UndofromHomepage") . '</a></li>';
-                    }
+                    if($post->show_in_homepage == null):
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=homepage" class="dropdown-item pl-3">
+                                    <i class="tio-clock text-success"></i> Pick for Homepage
+                                </a>
+                            </li>';
+                    else:
+                        $return .= '<li>
+                                <a href="' . route("$this->prefix.edit",  $post->id) . '?purpose=homepage" class="dropdown-item pl-3">
+                                    <i class="tio-clock"></i> Undo From Homepage
+                                </a>
+                            </li>';
+                    endif;
 
-                    $edion = $edion .  '<li class="divider"></li>';
+                    $return .= '<li class="divider"></li>';
+                    $return .= '<li>
+                            <a target="_blank" href="/edit/' . $post->id . '" class="dropdown-item pl-3">
+                                <i class="tio-new-message"></i> Edit Post
+                            </a>
+                        </li>';
+                    $return .= '<li class="divider"></li>';
+                    $return .= '<li>
+                            <a href="' . route("$this->prefix.destroy",  $post->id) . '" class="dropdown-item pl-3">
+                                <i class="tio-add-to-trash text-danger mr-1"></i> Send to Trash
+                            </a>
+                        </li>';
+                
+                else:
+                    $return .= '<li><a href="' . route("$this->prefix.destroy",  $post->id) . '" class="dropdown-item pl-3"><i class="tio-recycling text-success mr-1"></i> Retrieve from Trash</a></li>';
+                endif;
 
-                    $edion = $edion .  '<li><a target="_blank" href="/edit/' . $post->id . '"><i class="fa fa-edit"></i> ' . trans("admin.EditPost") . '</a></li>';
+                $return .= '<li>
+                    <a href="' . route("$this->prefix.destroy",  $post->id) . '?force=true" class="dropdown-item pl-3 text-danger">
+                        <i class="tio-delete  mr-1"></i> Hapus Permanen
+                    </a>
+                </li>';
 
-                    $edion = $edion .  '<li class="divider"></li>';
-                }
+                $return .= '</ul>';
 
-                if ($post->deleted_at == null) {
-                    $edion = $edion . '<li><a class="sendtrash" href="' . route("$this->prefix.destroy",  $post->id) . '"><i class="fa fa-trash"></i> ' . trans("admin.SendtoTrash") . '</a></li>';
-                } else {
-                    $edion = $edion . '<li><a href="' . route("$this->prefix.destroy",  $post->id) . '"><i class="fa fa-trash"></i> ' . trans("admin.RetrievefromTrash") . '</a></li>';
-                }
-
-                $edion = $edion .  '<li><a class="permanently" href="' . route("$this->prefix.destroy",  $post->id) . '?force=true"><i class="fa fa-remove"></i> ' . trans("admin.Deletepermanently") . '</a></li>';
-
-                $edion = $edion .  '</ul>
-                            </div>';
-
-                return $edion;
+                return $return;
             })
             ->escapeColumns(['*'])
             ->make(true);
