@@ -4,6 +4,16 @@
 @section('inner-css')
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/nestable2/1.6.0/jquery.nestable.min.css">
 	<link rel="stylesheet" href="{{ asset('assets/console/css/menu.css') }}">
+
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+	<style>
+		.material-icons {
+			padding-top: 10px;
+    		line-height: 0px;
+    		margin-right: 5px;
+    		font-size: 15px;
+		}
+	</style>	
 @endsection
 
 @section('inner-js')

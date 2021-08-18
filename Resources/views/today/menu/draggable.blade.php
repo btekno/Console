@@ -1,7 +1,7 @@
 <ol class="dd-list">
     @foreach ($lists as $list)
         <li class="dd-item" data-order="{{ $list->order }}" data-id="{{ $list->id }}">
-            <div class="dd-handle">
+            <div class="dd-handle d-flex align-content-center">
                 <span class="item-icon" >{!! menu_icon($list->icon) !!} </span>
                 <span class="item-title">{{ $list->title }}</span>
                 <span class="item-url">{{ $list->url }}</span>
